@@ -16,7 +16,7 @@ type Mosquitero struct {
 var mqtinstance *Mosquitero
 var mqtonce sync.Once
 
-// InitMosquitero inicializa la única instancia de Mosquitero.
+// GetMosquitero retorna la única instancia de Mosquitero.
 func InitMosquitero(server, username, password string) *Mosquitero {
 	mqtonce.Do(func() {
 		opts := mqtt.NewClientOptions()
@@ -36,7 +36,6 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 	})
 	return mqtinstance
 }
-
 func GetMosquitero() *Mosquitero {
 	return mqtinstance
 }
@@ -45,7 +44,6 @@ func GetMosquitero() *Mosquitero {
 func (m *Mosquitero) Send(topic string, payload string) {
 	go m.InternalSend(topic, payload)
 }
-
 func (m *Mosquitero) InternalSend(topic string, payload string) {
 	token := m.client.Publish(topic, 0, false, payload)
 	token.Wait()
@@ -63,17 +61,6 @@ func (m *Mosquitero) CheckConnection() {
 	}
 }
 
-// Subscribe se suscribe a una lista de topics con un handler para los mensajes.
-func (m *Mosquitero) Subscribe(topics []string, handler mqtt.MessageHandler) {
-	for _, topic := range topics {
-		if token := m.client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
-			log.Printf("Error al suscribirse al topic %s: %s", topic, token.Error())
-		} else {
-			log.Printf("Suscrito al topic %s", topic)
-		}
-	}
-}
-
 func Mosquiteroinit() {
 	// Ejemplo de uso
 	mqttServer := viper.GetString("mosquitero.mqttserver")
@@ -82,14 +69,6 @@ func Mosquiteroinit() {
 
 	mosquitero := InitMosquitero(mqttServer, username, password)
 
-	// Suscribirse a topics
-	topics := []string{"mi/topic", "otro/topic"}
-	mosquitero.Subscribe(topics, defaultMessageHandler)
-
-	// Enviar un mensaje
 	mosquitero.Send("mi/topic", "mensaje")
-}
 
-func defaultMessageHandler(client mqtt.Client, msg mqtt.Message) {
-	log.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 }
