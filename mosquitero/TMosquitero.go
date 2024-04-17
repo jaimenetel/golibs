@@ -61,7 +61,7 @@ func (m *Mosquitero) CheckConnection() {
 	}
 }
 
-func init() {
+func Mosquiteroinit() {
 	// Ejemplo de uso
 	mqttServer := viper.GetString("mosquitero.mqttserver")
 	username := viper.GetString("mosquitero.username")
