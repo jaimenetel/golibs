@@ -90,6 +90,7 @@ func init() {
 	// GetInstanceMlt().GetDBManager("screenfain").db.AutoMigrate(&FilesToSend{})
 }
 func Nomain() {
+
 	//	registry := GetInstance()
 	//	registry.AddDBManager("nombreBaseDeDatos") // Asume configuración para "nombreBaseDeDatos"
 
