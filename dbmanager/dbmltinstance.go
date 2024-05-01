@@ -83,11 +83,11 @@ func (r *ManagerRegistry) GetDBManager(nombre string) *DBManagerMlt {
 }
 
 func init() {
-	registry := GetInstanceMlt()
-	registry.AddDBManager("screenfain")
-	registry.AddDBManager("gateway")
-	GetInstanceMlt().GetDBManager("screenfain").db.AutoMigrate(&FileEntry{})
-	GetInstanceMlt().GetDBManager("screenfain").db.AutoMigrate(&FilesToSend{})
+	// registry := GetInstanceMlt()
+	// registry.AddDBManager("screenfain")
+	// registry.AddDBManager("gateway")
+	// GetInstanceMlt().GetDBManager("screenfain").db.AutoMigrate(&FileEntry{})
+	// GetInstanceMlt().GetDBManager("screenfain").db.AutoMigrate(&FilesToSend{})
 }
 func Nomain() {
 	//	registry := GetInstance()
