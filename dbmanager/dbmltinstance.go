@@ -16,6 +16,10 @@ type DBManagerMlt struct {
 	dsn string
 }
 
+func (d *DBManagerMlt) GetDB() *gorm.DB {
+	return d.db
+}
+
 type ManagerRegistry struct {
 	managers map[string]*DBManagerMlt
 	sync.Mutex
