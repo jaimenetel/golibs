@@ -1,6 +1,7 @@
 package mosquitero
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -21,11 +22,16 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 	mqtonce.Do(func() {
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(server)
+		opts.SetClientID("go_mqtt_client")
 		opts.SetUsername(username)
 		opts.SetPassword(password)
 		opts.SetAutoReconnect(true)
 		opts.SetKeepAlive(2 * time.Second)
 		opts.SetPingTimeout(1 * time.Second)
+		opts.SetConnectTimeout(5 * time.Second) // Tiempo de espera para la conexión inicial
+		opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
+			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
+		})
 
 		client := mqtt.NewClient(opts)
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
