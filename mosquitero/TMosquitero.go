@@ -31,6 +31,7 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 		opts.SetConnectTimeout(5 * time.Second) // Tiempo de espera para la conexión inicial
 		opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
+
 		})
 
 		client := mqtt.NewClient(opts)
@@ -50,6 +51,10 @@ func GetMosquitero() *Mosquitero {
 // Send envía un mensaje al topic especificado.
 func (m *Mosquitero) Send(topic string, payload string) {
 	go m.InternalSend(topic, payload)
+}
+
+func (m *Mosquitero) GetClient() mqtt.Client {
+	return m.client
 }
 
 func (m *Mosquitero) InternalSend(topic string, payload string) {
