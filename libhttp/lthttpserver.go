@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	logrequest "github.com/jaimenetel/golibs/logrequest"
 )
 
 //var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
@@ -304,7 +305,7 @@ func PrintResponse(w http.ResponseWriter) {
 func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Obten el token JWT del encabezado de autorización
-		//logrequest := LogRequest{}
+		logrequest := logrequest.LogRequest{}
 		bearer_string := "Bearer"
 		imprimirDatosSolicitud(w, r)
 		fmt.Println("tras solicitud", roles)
@@ -315,25 +316,27 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 		// json, _ := logrequest.ToJSON()
 		// fmt.Println(json)
 		//GetMongoSaver().SaveJSON(json, "requestlog")
-		if tokenString == "" {
-			http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
-			return
+		if roles != "---" {
+			if tokenString == "" {
+				http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
+				return
+			}
+			fmt.Println("con token:", tokenString)
+
+			fmt.Println("token valido")
+			// Verifica el rol del usuario
+
+			fmt.Println("tras claims")
+			role := logrequest.Claims["role"].(string)
+			fmt.Println("Roles: ", role)
+			if roles != "---" {
+				if !CheckRoles(role, roles) {
+					http.Error(w, "Acceso no autorizado", http.StatusForbidden)
+					return
+				}
+			}
+			fmt.Println("tenemos roles")
 		}
-		fmt.Println("con token:", tokenString)
-
-		fmt.Println("token valido")
-		// Verifica el rol del usuario
-
-		fmt.Println("tras claims")
-		//	role, ok := logrequest.Claims["role"].(string)
-		// fmt.Println("Roles: ", role)
-		// if roles != "---" {
-		// 	if !ok || !CheckRoles(role, roles) {
-		// 		http.Error(w, "Acceso no autorizado", http.StatusForbidden)
-		// 		return
-		// 	}
-		// }
-		fmt.Println("tenemos roles")
 		// Si el usuario tiene el rol ROLE_ADMIN, permite el acceso al manejador del endpoint
 		next.ServeHTTP(w, r)
 	})
