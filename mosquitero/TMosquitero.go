@@ -31,7 +31,7 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 		opts.SetConnectTimeout(5 * time.Second) // Tiempo de espera para la conexión inicial
 		opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
-
+			client.Connect()
 		})
 
 		client := mqtt.NewClient(opts)
