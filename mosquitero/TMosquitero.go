@@ -32,6 +32,7 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 		opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
 			client.Connect()
+			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
 		})
 
 		client := mqtt.NewClient(opts)
