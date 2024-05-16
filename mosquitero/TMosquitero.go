@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -15,12 +16,19 @@ type Mosquitero struct {
 var mqtinstance *Mosquitero
 var mqtonce sync.Once
 
-// InitMosquitero inicializa la única instancia de Mosquitero.
 func InitMosquitero(server, username, password string) *Mosquitero {
+	return internalInitMosquitero(server, username, password, uuid.New().String())
+}
+func NewInitMosquitero(server, username, password, clientid string) *Mosquitero {
+	return internalInitMosquitero(server, username, password, clientid)
+}
+
+// InitMosquitero inicializa la única instancia de Mosquitero.
+func internalInitMosquitero(server, username, password, clientid string) *Mosquitero {
 	mqtonce.Do(func() {
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(server)
-		opts.SetClientID("go_mqtt_client")
+		opts.SetClientID(clientid)
 		opts.SetUsername(username)
 		opts.SetPassword(password)
 		opts.SetAutoReconnect(true)
