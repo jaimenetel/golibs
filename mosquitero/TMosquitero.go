@@ -1,10 +1,8 @@
 package mosquitero
 
 import (
-	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/spf13/viper"
@@ -26,14 +24,14 @@ func InitMosquitero(server, username, password string) *Mosquitero {
 		opts.SetUsername(username)
 		opts.SetPassword(password)
 		opts.SetAutoReconnect(true)
-		opts.SetKeepAlive(2 * time.Second)
-		opts.SetPingTimeout(1 * time.Second)
-		opts.SetConnectTimeout(5 * time.Second) // Tiempo de espera para la conexión inicial
-		opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
-			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
-			client.Connect()
-			fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
-		})
+		// opts.SetKeepAlive(2 * time.Second)
+		// opts.SetPingTimeout(1 * time.Second)
+		// opts.SetConnectTimeout(5 * time.Second) // Tiempo de espera para la conexión inicial
+		// opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
+		// 	fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
+		// 	client.Connect()
+		// 	fmt.Printf("Connection lost: %v. Reconnecting...\n", err)
+		// })
 
 		client := mqtt.NewClient(opts)
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
@@ -51,15 +49,18 @@ func GetMosquitero() *Mosquitero {
 
 // Send envía un mensaje al topic especificado.
 func (m *Mosquitero) Send(topic string, payload string) {
-	go m.InternalSend(topic, payload)
+	go m.InternalSend(topic, 0, payload)
+}
+func (m *Mosquitero) SendQos(topic string, Qos byte, payload string) {
+	go m.InternalSend(topic, 0, payload)
 }
 
 func (m *Mosquitero) GetClient() mqtt.Client {
 	return m.client
 }
 
-func (m *Mosquitero) InternalSend(topic string, payload string) {
-	token := m.client.Publish(topic, 0, false, payload)
+func (m *Mosquitero) InternalSend(topic string, Qos byte, payload string) {
+	token := m.client.Publish(topic, Qos, false, payload)
 	token.Wait()
 	if token.Error() != nil {
 		log.Println("Error al publicar:", token.Error())

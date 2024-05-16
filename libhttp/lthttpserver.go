@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	logrequest "github.com/jaimenetel/golibs/logrequest"
+	//logrequest "github.com/jaimenetel/golibs/logrequest"
 )
 
 //var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
@@ -305,17 +305,19 @@ func PrintResponse(w http.ResponseWriter) {
 func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Obten el token JWT del encabezado de autorización
-		logrequest := logrequest.LogRequest{}
+		//logrequest := logrequest.LogRequest{}
 		bearer_string := "Bearer"
 		imprimirDatosSolicitud(w, r)
 		fmt.Println("tras solicitud", roles)
 		//CheckAPIKey(r)
 		tokenString := strings.TrimSpace(strings.Replace(r.Header.Get("Authorization"), bearer_string, "", -1))
-		// logrequest.Claims, logrequest.User, logrequest.ValidoHasta, logrequest.Roles, _ = DecodificarJWTVerbose(tokenString)
+
+		//logrequest.Claims, logrequest.User, logrequest.ValidoHasta, logrequest.Roles, err1 = DecodificarJWTVerbose(tokenString)
 		// logrequest.SetRequestDetails(r)
 		// json, _ := logrequest.ToJSON()
 		// fmt.Println(json)
 		//GetMongoSaver().SaveJSON(json, "requestlog")
+
 		if roles != "---" {
 			if tokenString == "" {
 				http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
@@ -325,9 +327,15 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 
 			fmt.Println("token valido")
 			// Verifica el rol del usuario
+			myClaims, err := DecodificarJWT(tokenString)
+			if err != nil {
+				http.Error(w, "Token JWT no válido", http.StatusUnauthorized)
+				return
+			}
 
 			fmt.Println("tras claims")
-			role := logrequest.Claims["role"].(string)
+			//role := logrequest.Claims["role"].(string)
+			role := myClaims["role"].(string)
 			fmt.Println("Roles: ", role)
 			if roles != "---" {
 				if !CheckRoles(role, roles) {
