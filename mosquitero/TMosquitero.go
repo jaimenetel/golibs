@@ -6,6 +6,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+
 	"github.com/spf13/viper"
 )
 
