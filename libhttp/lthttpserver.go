@@ -2,6 +2,7 @@ package libhttp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -320,7 +321,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 
 		if roles != "---" {
 			if tokenString == "" {
-				http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
+				// http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
+				RespondWithError(w, http.StatusUnauthorized, "Token JWT no proporcionado")
 				return
 			}
 			fmt.Println("con token:", tokenString)
@@ -329,7 +331,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 			// Verifica el rol del usuario
 			myClaims, err := DecodificarJWT(tokenString)
 			if err != nil {
-				http.Error(w, "Token JWT no válido", http.StatusUnauthorized)
+				// http.Error(w, "Token JWT no válido", http.StatusUnauthorized)
+				RespondWithError(w, http.StatusUnauthorized, "Token JWT no válido")
 				return
 			}
 
@@ -339,7 +342,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 			fmt.Println("Roles: ", role)
 			if roles != "---" {
 				if !CheckRoles(role, roles) {
-					http.Error(w, "Acceso no autorizado", http.StatusForbidden)
+					// http.Error(w, "Acceso no autorizado", http.StatusForbidden)
+					RespondWithError(w, http.StatusForbidden, "Acceso no autorizado")
 					return
 				}
 			}
@@ -354,4 +358,20 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 func init() {
 	//	PrintCallerInfo()
 
+}
+
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
+func RespondWithError(w http.ResponseWriter, code int, message string) {
+	response := ErrorResponse{
+		Error:   http.StatusText(code),
+		Message: message,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(response)
 }
