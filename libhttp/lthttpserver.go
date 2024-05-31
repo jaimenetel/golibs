@@ -413,6 +413,9 @@ func ParseRolesAndMethod(args ...string) (roles, method string) {
 		roles = "---"
 	} else if len(args) == 1 {
 		roles = args[0]
+		if roles == "" {
+			roles = "---"
+		}
 	} else if len(args) == 2 {
 		roles = args[0]
 		method = args[1]
