@@ -406,7 +406,7 @@ func ConfigMethodType(next http.Handler, method string) http.Handler {
 	})
 }
 
-// ParseMethodAndRoles parses input arguments and returns method and roles.
+// ParseMethodAndRoles parses input arguments and returns method and roles. Si todo está vacio, nos añade roles "---" Method por defecto es "POST"
 func ParseRolesAndMethod(args ...string) (roles, method string) {
 
 	if len(args) == 0 {
