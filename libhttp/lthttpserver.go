@@ -40,8 +40,11 @@ func Ltinstance() *lthttp {
 	return instance
 }
 
-// Método para añadir endpoints y roles a lthttp
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, method, roles string) {
+// Método para añadir endpoints y roles a lthttp. "args" --> (roles, method)
+func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
+
+	roles, method := ParseRolesAndMethod(args...)
+
 	endpoint := Endpoint{
 		Name:    name,
 		Handler: handler,
@@ -50,9 +53,14 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, method, rol
 	}
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, method, roles string) {
+
+// "args" --> (roles, method)
+func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
+
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
+
+	roles, method := ParseRolesAndMethod(args...)
 
 	endpoint := Endpoint{
 		Name:    name,
@@ -390,10 +398,24 @@ func RespondWithError(w http.ResponseWriter, code int, message string) {
 // ConfigMethodType
 func ConfigMethodType(next http.Handler, method string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != method {
-			http.Error(w, "Only "+method+" is supported", http.StatusMethodNotAllowed)
+		if r.Method != method && method != "" {
+			RespondWithError(w, http.StatusMethodNotAllowed, "Only "+method+" is supported")
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// ParseMethodAndRoles parses input arguments and returns method and roles.
+func ParseRolesAndMethod(args ...string) (roles, method string) {
+
+	if len(args) == 0 {
+		roles = "---"
+	} else if len(args) == 1 {
+		roles = args[0]
+	} else if len(args) == 2 {
+		roles = args[0]
+		method = args[1]
+	}
+	return
 }
