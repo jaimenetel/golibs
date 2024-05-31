@@ -22,6 +22,7 @@ type Endpoint struct {
 	Name    string
 	Handler http.HandlerFunc
 	Roles   string
+	Method  string
 }
 
 type lthttp struct {
@@ -40,15 +41,16 @@ func Ltinstance() *lthttp {
 }
 
 // Método para añadir endpoints y roles a lthttp
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, roles string) {
+func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, method, roles string) {
 	endpoint := Endpoint{
 		Name:    name,
 		Handler: handler,
 		Roles:   roles,
+		Method:  method,
 	}
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, roles string) {
+func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, method, roles string) {
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
 
@@ -56,6 +58,7 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 		Name:    name,
 		Handler: ohandler,
 		Roles:   roles,
+		Method:  method,
 	}
 
 	lt.Endpoints = append(lt.Endpoints, endpoint)
@@ -72,6 +75,13 @@ func (lt *lthttp) Start() {
 		fmt.Println(endpoint)
 		// Envuelve el handler original con los middlewares de auth y log, y luego con el CORS middleware
 		handlerWithMiddleware := corsMiddleware(authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
+
+		if endpoint.Method == "" || (endpoint.Method != "POST" && endpoint.Method != "GET") {
+			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, "POST")
+		} else {
+			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, endpoint.Method)
+		}
+
 		http.Handle(endpoint.Name, handlerWithMiddleware)
 	}
 }
@@ -365,6 +375,7 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// Generar la respuesta en formato JSON
 func RespondWithError(w http.ResponseWriter, code int, message string) {
 	response := ErrorResponse{
 		Error:   http.StatusText(code),
@@ -374,4 +385,15 @@ func RespondWithError(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(response)
+}
+
+// ConfigMethodType
+func ConfigMethodType(next http.Handler, method string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			http.Error(w, "Only "+method+" is supported", http.StatusMethodNotAllowed)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
