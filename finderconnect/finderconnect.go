@@ -10,16 +10,14 @@ var URLgetIp string = "http://172.17.0.56:8701/findip?find=%s"
 var URLgetLtm string = "http://172.17.0.56:8701/findltm?find=%s"
 var URLgetDisp string = "http://172.17.0.56:8701/finddispositivo?find=%s"
 
-// FetchURL llama a una URL dada y devuelve el contenido como una cadena de texto.
 func FetchURL(url string) (string, error) {
-	// Realiza la solicitud HTTP GET
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error al hacer la solicitud GET: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// Verifica que la respuesta sea satisfactoria
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("respuesta fallida con código de estado: %d", resp.StatusCode)
 	}
