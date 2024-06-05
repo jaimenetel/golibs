@@ -63,7 +63,9 @@ func GetLTM(find string) (Dispositivo, error) {
 	if err != nil {
 		return Dispositivo{}, err
 	}
+	fmt.Println("Result:", result)
 	var dispositivo Dispositivo
+
 	err = json.Unmarshal([]byte(result), &dispositivo)
 	if err != nil {
 		return Dispositivo{}, err
@@ -76,7 +78,9 @@ func GetDisp(find string) (Dispositivo, error) {
 	if err != nil {
 		return Dispositivo{}, err
 	}
+	fmt.Println("Result:", result)
 	var dispositivo Dispositivo
+
 	err = json.Unmarshal([]byte(result), &dispositivo)
 	if err != nil {
 		return Dispositivo{}, err
