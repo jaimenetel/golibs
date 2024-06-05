@@ -31,10 +31,7 @@ func FetchURL(url string) (string, error) {
 	return string(body), nil
 }
 
-type Finder struct {
-}
-
-func (f *Finder) GetIp(find string) (string, error) {
+func GetIp(find string) (string, error) {
 	URL := fmt.Sprintf(URLgetIp, find)
 	result, err := FetchURL(URL)
 	if err != nil {
@@ -43,7 +40,7 @@ func (f *Finder) GetIp(find string) (string, error) {
 	return result, nil
 }
 
-func (f *Finder) GetLTM(find string) (string, error) {
+func GetLTM(find string) (string, error) {
 	URL := fmt.Sprintf(URLgetLtm, find)
 	result, err := FetchURL(URL)
 	if err != nil {
@@ -51,7 +48,7 @@ func (f *Finder) GetLTM(find string) (string, error) {
 	}
 	return result, nil
 }
-func (f *Finder) GetDisp(find string) (string, error) {
+func GetDisp(find string) (string, error) {
 	URL := fmt.Sprintf(URLgetDisp, find)
 	result, err := FetchURL(URL)
 	if err != nil {
