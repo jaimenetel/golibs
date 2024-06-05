@@ -2,6 +2,7 @@ package libhttp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,6 +22,7 @@ type Endpoint struct {
 	Name    string
 	Handler http.HandlerFunc
 	Roles   string
+	Method  string
 }
 
 type lthttp struct {
@@ -38,23 +40,33 @@ func Ltinstance() *lthttp {
 	return instance
 }
 
-// Método para añadir endpoints y roles a lthttp
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, roles string) {
+// Método para añadir endpoints y roles a lthttp. "args" --> (roles, method)
+func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
+
+	roles, method := ParseRolesAndMethod(args...)
+
 	endpoint := Endpoint{
 		Name:    name,
 		Handler: handler,
 		Roles:   roles,
+		Method:  method,
 	}
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, roles string) {
+
+// "args" --> (roles, method)
+func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
+
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
+
+	roles, method := ParseRolesAndMethod(args...)
 
 	endpoint := Endpoint{
 		Name:    name,
 		Handler: ohandler,
 		Roles:   roles,
+		Method:  method,
 	}
 
 	lt.Endpoints = append(lt.Endpoints, endpoint)
@@ -71,6 +83,13 @@ func (lt *lthttp) Start() {
 		fmt.Println(endpoint)
 		// Envuelve el handler original con los middlewares de auth y log, y luego con el CORS middleware
 		handlerWithMiddleware := corsMiddleware(authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
+
+		if endpoint.Method == "" || (endpoint.Method != "POST" && endpoint.Method != "GET") {
+			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, "POST")
+		} else {
+			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, endpoint.Method)
+		}
+
 		http.Handle(endpoint.Name, handlerWithMiddleware)
 	}
 }
@@ -320,7 +339,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 
 		if roles != "---" {
 			if tokenString == "" {
-				http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
+				// http.Error(w, "Token JWT no proporcionado", http.StatusUnauthorized)
+				RespondWithError(w, http.StatusUnauthorized, "Token JWT no proporcionado")
 				return
 			}
 			fmt.Println("con token:", tokenString)
@@ -329,7 +349,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 			// Verifica el rol del usuario
 			myClaims, err := DecodificarJWT(tokenString)
 			if err != nil {
-				http.Error(w, "Token JWT no válido", http.StatusUnauthorized)
+				// http.Error(w, "Token JWT no válido", http.StatusUnauthorized)
+				RespondWithError(w, http.StatusUnauthorized, "Token JWT no válido")
 				return
 			}
 
@@ -339,7 +360,8 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 			fmt.Println("Roles: ", role)
 			if roles != "---" {
 				if !CheckRoles(role, roles) {
-					http.Error(w, "Acceso no autorizado", http.StatusForbidden)
+					// http.Error(w, "Acceso no autorizado", http.StatusForbidden)
+					RespondWithError(w, http.StatusForbidden, "Acceso no autorizado")
 					return
 				}
 			}
@@ -354,4 +376,49 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 func init() {
 	//	PrintCallerInfo()
 
+}
+
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
+// Generar la respuesta en formato JSON
+func RespondWithError(w http.ResponseWriter, code int, message string) {
+	response := ErrorResponse{
+		Error:   http.StatusText(code),
+		Message: message,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(response)
+}
+
+// ConfigMethodType
+func ConfigMethodType(next http.Handler, method string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method && method != "" {
+			RespondWithError(w, http.StatusMethodNotAllowed, "Only "+method+" is supported")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ParseMethodAndRoles parses input arguments and returns method and roles. Si todo está vacio, nos añade roles "---" Method por defecto es "POST"
+func ParseRolesAndMethod(args ...string) (roles, method string) {
+
+	if len(args) == 0 {
+		roles = "---"
+	} else if len(args) == 1 {
+		roles = args[0]
+		if roles == "" {
+			roles = "---"
+		}
+	} else if len(args) == 2 {
+		roles = args[0]
+		method = args[1]
+	}
+	return
 }
