@@ -11,12 +11,19 @@ var URLgetIp string = "http://172.17.0.56:8701/findip?find=%s"
 var URLgetLtm string = "http://172.17.0.56:8701/findltm?find=%s"
 var URLgetDisp string = "http://172.17.0.56:8701/finddispositivo?find=%s"
 
+type Findiccid struct {
+	Iccid  string `gorm:"column:iccid"`
+	Tofind string `gorm:"column:tofind"`
+	Tipo   string `gorm:"column:tipo"`
+}
+
 type _Cliente struct {
 	Iccid   string `gorm:"column:iccid"`
 	Cliente string `gorm:"column:cliente"`
 	Codigo  string `gorm:"column:codigo"`
 	Name    string `gorm:"column:name"`
 }
+
 type Dispositivo struct {
 	ICCID   string   `json:"iccid"`
 	IP      string   `json:"ip"`
@@ -57,20 +64,20 @@ func GetIp(find string) (string, error) {
 	return result, nil
 }
 
-func GetLTM(find string) (Dispositivo, error) {
+func GetLTM(find string) ([]Findiccid, error) {
 	URL := fmt.Sprintf(URLgetLtm, find)
 	result, err := FetchURL(URL)
 	if err != nil {
-		return Dispositivo{}, err
+		return []Findiccid{}, err
 	}
 	fmt.Println("Result:", result)
-	var dispositivo Dispositivo
+	var resti []Findiccid
 
-	err = json.Unmarshal([]byte(result), &dispositivo)
+	err = json.Unmarshal([]byte(result), &resti)
 	if err != nil {
-		return Dispositivo{}, err
+		return []Findiccid{}, err
 	}
-	return dispositivo, nil
+	return resti, nil
 }
 func GetDisp(find string) (Dispositivo, error) {
 	URL := fmt.Sprintf(URLgetDisp, find)
