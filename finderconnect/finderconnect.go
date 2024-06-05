@@ -1,6 +1,7 @@
 package finderconnect
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +10,22 @@ import (
 var URLgetIp string = "http://172.17.0.56:8701/findip?find=%s"
 var URLgetLtm string = "http://172.17.0.56:8701/findltm?find=%s"
 var URLgetDisp string = "http://172.17.0.56:8701/finddispositivo?find=%s"
+
+type _Cliente struct {
+	Iccid   string `gorm:"column:iccid"`
+	Cliente string `gorm:"column:cliente"`
+	Codigo  string `gorm:"column:codigo"`
+	Name    string `gorm:"column:name"`
+}
+type Dispositivo struct {
+	ICCID   string   `json:"iccid"`
+	IP      string   `json:"ip"`
+	IMEI    string   `json:"imei"`
+	Phone   string   `json:"phone"`
+	LTM     string   `gorm:"column:ltm"`
+	LTC     string   `gorm:"column:ltc"`
+	Cliente _Cliente `json:"cliente,omitempty"`
+}
 
 func FetchURL(url string) (string, error) {
 
@@ -40,19 +57,29 @@ func GetIp(find string) (string, error) {
 	return result, nil
 }
 
-func GetLTM(find string) (string, error) {
+func GetLTM(find string) (Dispositivo, error) {
 	URL := fmt.Sprintf(URLgetLtm, find)
 	result, err := FetchURL(URL)
 	if err != nil {
-		return "", err
+		return Dispositivo{}, err
 	}
-	return result, nil
+	var dispositivo Dispositivo
+	err = json.Unmarshal([]byte(result), &dispositivo)
+	if err != nil {
+		return Dispositivo{}, err
+	}
+	return dispositivo, nil
 }
-func GetDisp(find string) (string, error) {
+func GetDisp(find string) (Dispositivo, error) {
 	URL := fmt.Sprintf(URLgetDisp, find)
 	result, err := FetchURL(URL)
 	if err != nil {
-		return "", err
+		return Dispositivo{}, err
 	}
-	return result, nil
+	var dispositivo Dispositivo
+	err = json.Unmarshal([]byte(result), &dispositivo)
+	if err != nil {
+		return Dispositivo{}, err
+	}
+	return dispositivo, nil
 }
