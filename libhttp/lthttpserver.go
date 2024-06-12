@@ -75,6 +75,7 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 func (lt *lthttp) StartSinCOrs() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
+		fmt.Println("(PRUEBA) AQUI GUARDA URL Y MAS")
 		http.Handle(endpoint.Name, authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
 	}
 }
