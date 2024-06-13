@@ -107,7 +107,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 		}
 	} else {
 		// Registro encontrado, verificar identidad
-		if !reflect.DeepEqual(existingLog, logEntry) {
+		if CompareEndpointLogs(existingLog, logEntry) {
 			// Los valores son diferentes, actualiza el registro
 			if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
 				log.Printf("Error updating endpoint log: %v", err)
@@ -129,4 +129,20 @@ func GetFunctionName(i interface{}) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 	parts := strings.Split(fullName, ".")
 	return parts[len(parts)-1]
+}
+
+func CompareEndpointLogs(existingLog, logEntry EndpointSave) bool {
+	// Usamos reflexión para comparar entidades
+	vExisting := reflect.ValueOf(existingLog)
+	vLogEntry := reflect.ValueOf(logEntry)
+	t := reflect.TypeOf(logEntry)
+
+	for i := 0; i < t.NumField(); i++ {
+		fieldName := t.Field(i).Name
+		if vExisting.FieldByName(fieldName).Interface() != vLogEntry.FieldByName(fieldName).Interface() {
+			return true
+
+		}
+	}
+	return false
 }
