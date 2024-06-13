@@ -96,14 +96,14 @@ func (lt *lthttp) Start() {
 		// Envuelve el handler original con los middlewares de auth y log, y luego con el CORS middleware
 		handlerWithMiddleware := corsMiddleware(authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
 
+		if endpoint.Method == "" || (endpoint.Method != "POST" && endpoint.Method != "GET") {
+			endpoint.Method = "POST"
+		}
+
 		// Guardar endpoint en bdd
 		lt.SaveEndpointLog(endpoint)
 
-		if endpoint.Method == "" || (endpoint.Method != "POST" && endpoint.Method != "GET") {
-			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, "POST")
-		} else {
-			handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, endpoint.Method)
-		}
+		handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, endpoint.Method)
 
 		http.Handle(endpoint.Name, handlerWithMiddleware)
 	}
