@@ -7,10 +7,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-
 	"strings"
 	"sync"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/dgrijalva/jwt-go"
 	//logrequest "github.com/jaimenetel/golibs/logrequest"
@@ -28,14 +29,17 @@ type Endpoint struct {
 type lthttp struct {
 	Port      string
 	Endpoints []Endpoint
+	DB        *gorm.DB // Connect con base de datos
 }
 
 var instance *lthttp
 var oncelt sync.Once
 
-func Ltinstance() *lthttp {
+// DatabaseConfig = user, password, host, port, name
+func Ltinstance(config *DatabaseConfig) *lthttp {
 	oncelt.Do(func() {
 		instance = &lthttp{}
+		instance.initDB(config)
 	})
 	return instance
 }
@@ -75,7 +79,6 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 func (lt *lthttp) StartSinCOrs() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
-		fmt.Println("(PRUEBA) AQUI GUARDA URL Y MAS")
 		http.Handle(endpoint.Name, authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
 	}
 }
@@ -178,7 +181,7 @@ func imprimirDatosSolicitud(w http.ResponseWriter, r *http.Request) {
 	cuerpo, err := requestBodyToString(r)
 	if err != nil {
 		if err == io.EOF {
-
+			fmt.Println("Error EOF:", err)
 		}
 		fmt.Println("Error al leer el cuerpo de la solicitud:", err)
 		return
@@ -222,18 +225,18 @@ func DecodificarJWT(tokenString string) (jwt.MapClaims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("Error al decodificar el token: %v", err)
+		return nil, fmt.Errorf("error al decodificar el token: %v", err)
 	}
 
 	// Validar el token
 	if !token.Valid {
-		return nil, fmt.Errorf("Token no válido")
+		return nil, fmt.Errorf("token no válido")
 	}
 
 	// Obtener el contenido del token (payload)
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, fmt.Errorf("Error al obtener las claims del token")
+		return nil, fmt.Errorf("error al obtener las claims del token")
 	}
 	fmt.Println(claims)
 	return claims, nil
@@ -251,29 +254,29 @@ func DecodificarJWTVerbose(tokenString string) (jwt.MapClaims, string, time.Time
 	})
 
 	if err != nil {
-		return nil, "", time.Time{}, nil, fmt.Errorf("Error al decodificar el token: %v", err)
+		return nil, "", time.Time{}, nil, fmt.Errorf("error al decodificar el token: %v", err)
 	}
 
 	// Validar el token
 	if !token.Valid {
-		return nil, "", time.Time{}, nil, fmt.Errorf("Token no válido")
+		return nil, "", time.Time{}, nil, fmt.Errorf("token no válido")
 	}
 
 	// Obtener el contenido del token (payload)
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, "", time.Time{}, nil, fmt.Errorf("Error al obtener las claims del token")
+		return nil, "", time.Time{}, nil, fmt.Errorf("error al obtener las claims del token")
 	}
 
 	// Obtener el usuario y la fecha de expiración del token
 	usuario, usuarioOk := claims["sub"].(string)
 	if !usuarioOk {
-		return nil, "", time.Time{}, nil, fmt.Errorf("Error al obtener el usuario del token")
+		return nil, "", time.Time{}, nil, fmt.Errorf("error al obtener el usuario del token")
 	}
 
 	exp, expOk := claims["exp"].(float64)
 	if !expOk {
-		return nil, "", time.Time{}, nil, fmt.Errorf("Error al obtener la fecha de expiración del token")
+		return nil, "", time.Time{}, nil, fmt.Errorf("error al obtener la fecha de expiración del token")
 	}
 	fechaExpiracion := time.Unix(int64(exp), 0)
 
