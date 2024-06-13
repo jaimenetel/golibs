@@ -17,7 +17,7 @@ import (
 	//logrequest "github.com/jaimenetel/golibs/logrequest"
 )
 
-//var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
+// var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
 
 type Endpoint struct {
 	Name    string

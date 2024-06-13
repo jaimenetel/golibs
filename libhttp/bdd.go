@@ -9,9 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// initDB инициализирует соединение с базой данных
+var PROJECT_NAME string = "---"
+
+// initDB inicializa una conexión a la base de datos
 func (lt *lthttp) initDB(config interface{}) {
-	// Используем reflection для извлечения полей из переданной структуры
+	// Usar la reflexión para extraer campos de la estructura pasada
 	val := reflect.ValueOf(config)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -38,7 +40,7 @@ func (lt *lthttp) initDB(config interface{}) {
 		}
 	}
 
-	// Проверяем наличие всех необходимых полей
+	// Comprobando la presencia de todos los campos obligatorios
 	if dbUser == "" || dbPassword == "" || dbHost == "" || dbPort == "" {
 		log.Fatalf("Incomplete database configuration")
 	}
@@ -56,13 +58,12 @@ func (lt *lthttp) initDB(config interface{}) {
 	}
 	lt.DB = db
 
-	// Автоматическая миграция структуры EndpointSave
+	// Migración automática de la estructura EndpointSave
 	lt.DB.AutoMigrate(&EndpointSave{})
 }
 
 type EndpointSave struct {
 	ID          uint   `gorm:"column:id;primaryKey"`
-	Url         string `gorm:"column:url;size:100"`
 	Route       string `gorm:"column:route;size:100"`
 	Port        string `gorm:"column:port;size:6"`
 	Type        string `gorm:"column:type;size:15"`
@@ -75,26 +76,15 @@ func (EndpointSave) TableName() string {
 	return "endpoints"
 }
 
-/*
-endpoint := Endpoint{
-		Name:    name,
-		Handler: ohandler,
-		Roles:   roles,
-		Method:  method,
-	}
-
-*/
-
-// SaveEndpointLog сохраняет лог endpoint в базу данных
+// SaveEndpointLog guarda el registro del punto final en la base de datos
 func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 	logEntry := EndpointSave{
-		Url:         "---", // Значение по умолчанию
 		Route:       endpoint.Name,
 		Port:        lt.Port,
 		Type:        endpoint.Method,
 		Roles:       endpoint.Roles,
-		Project:     "---", // Значение по умолчанию
-		Description: "---", // Значение по умолчанию
+		Project:     PROJECT_NAME,
+		Description: "---", // Por defecto
 	}
 
 	var existingLog EndpointSave
@@ -102,7 +92,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			// Запись не найдена, создаем новую
+			// Registro no encontrado, cree uno nuevo
 			if err := lt.DB.Create(&logEntry).Error; err != nil {
 				log.Printf("Error creating new endpoint log: %v", err)
 			} else {
@@ -112,11 +102,15 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 			log.Printf("Error querying endpoint log: %v", result.Error)
 		}
 	} else {
-		// Запись найдена, обновляем её
+		// Registro encontrado, actualícelo
 		if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
 			log.Printf("Error updating endpoint log: %v", err)
 		} else {
 			log.Println("Endpoint log updated successfully")
 		}
 	}
+}
+
+func SetProjectName(name string) {
+	PROJECT_NAME = name
 }
