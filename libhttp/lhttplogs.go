@@ -74,6 +74,7 @@ type EndpointSave struct {
 	Route       string `gorm:"column:route;size:100"`
 	Controller  string `gorm:"column:controller;size:100"`
 	Port        string `gorm:"column:port;size:6"`
+	QueryParams string `gorm:"column:queryparams;size:100"`
 	Type        string `gorm:"column:type;size:15"`
 	Roles       string `gorm:"column:roles;size:100"`
 	Project     string `gorm:"column:project;size:100"`
@@ -82,10 +83,12 @@ type EndpointSave struct {
 
 // SaveEndpointLog guarda el registro del punto final en la base de datos
 func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
+
 	logEntry := EndpointSave{
 		Route:       endpoint.Name,
 		Controller:  endpoint.Controller,
 		Port:        lt.Port,
+		QueryParams: endpoint.QueryParams,
 		Type:        endpoint.Method,
 		Roles:       endpoint.Roles,
 		Project:     PROJECT_NAME,
@@ -139,6 +142,7 @@ func CompareIfEndpointLogsAreSame(existingLog, logEntry EndpointSave) bool {
 		existingLog.Type == logEntry.Type &&
 		existingLog.Roles == logEntry.Roles &&
 		existingLog.Project == logEntry.Project &&
-		existingLog.Description == logEntry.Description
+		existingLog.Description == logEntry.Description &&
+		existingLog.QueryParams == logEntry.QueryParams
 
 }

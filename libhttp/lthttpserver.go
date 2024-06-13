@@ -20,11 +20,12 @@ import (
 // var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
 
 type Endpoint struct {
-	Name       string
-	Handler    http.HandlerFunc
-	Controller string
-	Roles      string
-	Method     string
+	Name        string
+	Handler     http.HandlerFunc
+	Controller  string
+	QueryParams string
+	Roles       string
+	Method      string
 }
 
 type lthttp struct {
@@ -45,25 +46,30 @@ func Ltinstance(config interface{}) *lthttp {
 	return instance
 }
 
-// Método para añadir endpoints y roles a lthttp. "args" --> (roles, method)
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
+// Método para añadir endpoints y roles a lthttp. "args" --> (roles, method) Requiere: nombre, controller, queryParams(o nil), args(OPCIONAL) (roles, method)
+func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, queryParams string, args ...string) {
 
 	roles, method := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
 
-	endpoint := Endpoint{
-		Name:       name,
-		Handler:    handler,
-		Controller: controllerName,
-		Roles:      roles,
-		Method:     method,
+	if queryParams == "" {
+		queryParams = "none"
 	}
-	lt.Endpoints = append(lt.Endpoints, endpoint)
 
+	endpoint := Endpoint{
+		Name:        name,
+		Handler:     handler,
+		Controller:  controllerName,
+		QueryParams: queryParams,
+		Roles:       roles,
+		Method:      method,
+	}
+
+	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
 
-// "args" --> (roles, method)
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
+// "args" --> (roles, method) Requiere: nombre, controller, prehandler, queryParams(o nil), args(OPCIONAL) (roles, method)
+func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, queryParams string, args ...string) {
 
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
@@ -71,12 +77,17 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 	roles, method := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
 
+	if queryParams == "" {
+		queryParams = "none"
+	}
+
 	endpoint := Endpoint{
-		Name:       name,
-		Handler:    ohandler,
-		Controller: controllerName,
-		Roles:      roles,
-		Method:     method,
+		Name:        name,
+		Handler:     ohandler,
+		Controller:  controllerName,
+		QueryParams: queryParams,
+		Roles:       roles,
+		Method:      method,
 	}
 
 	lt.Endpoints = append(lt.Endpoints, endpoint)
@@ -87,6 +98,13 @@ func (lt *lthttp) StartSinCOrs() {
 		fmt.Println(endpoint)
 
 		http.Handle(endpoint.Name, authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
+
+		if endpoint.Method == "" || (endpoint.Method != "POST" && endpoint.Method != "GET") {
+			endpoint.Method = "POST"
+		}
+
+		// Guardar endpoint en bdd
+		lt.SaveEndpointLog(endpoint)
 	}
 }
 func (lt *lthttp) Start() {
