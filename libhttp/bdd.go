@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"runtime"
+	"strings"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -105,11 +106,14 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 			log.Printf("Error querying endpoint log: %v", result.Error)
 		}
 	} else {
-		// Registro encontrado, actualícelo
-		if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
-			log.Printf("Error updating endpoint log: %v", err)
-		} else {
-			log.Println("Endpoint log updated successfully")
+		// Registro encontrado, verificar identidad
+		if !reflect.DeepEqual(existingLog, logEntry) {
+			// Los valores son diferentes, actualiza el registro
+			if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
+				log.Printf("Error updating endpoint log: %v", err)
+			} else {
+				log.Println("Endpoint log updated successfully")
+			}
 		}
 	}
 }
@@ -121,5 +125,8 @@ func (lt *lthttp) SetProjectName(name string) {
 
 // getFunctionName obtener nombre del controller
 func GetFunctionName(i interface{}) string {
-	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	//return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	parts := strings.Split(fullName, ".")
+	return parts[len(parts)-1]
 }
