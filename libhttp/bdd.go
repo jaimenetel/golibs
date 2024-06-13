@@ -61,13 +61,13 @@ func (lt *lthttp) initDB(config interface{}) {
 }
 
 type EndpointSave struct {
-	Url         string `gorm:"primaryKey;size:100"`
-	Route       string `gorm:"size:100"`
-	Port        string `gorm:"size:6"`
-	Type        string `gorm:"size:15"`
-	Roles       string `gorm:"size:100"`
-	Project     string `gorm:"size:100"`
-	Description string `gorm:"size:300"`
+	Url         string `gorm:"column:url;size:100"`
+	Route       string `gorm:"column:route;size:100"`
+	Port        string `gorm:"column:port;size:6"`
+	Type        string `gorm:"column:type;size:15"`
+	Roles       string `gorm:"column:roles;size:100"`
+	Project     string `gorm:"column:project;size:100"`
+	Description string `gorm:"column:desc;size:300"`
 }
 
 /*
