@@ -46,11 +46,16 @@ func Ltinstance(config interface{}) *lthttp {
 	return instance
 }
 
-// Método para añadir endpoints y roles a lthttp. "args" --> (roles, method) Requiere: nombre, controller, queryParams(o nil), args(OPCIONAL) (roles, method)
+// "args" --> (roles, method, queryParams) Requiere: nombre, controller, args(OPCIONAL) (roles, method, queryParams)
+// ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
 func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
 
 	roles, method, queryParams := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
+
+	if queryParams != "none" {
+		handler = withQueryParams(handler, queryParams)
+	}
 
 	endpoint := Endpoint{
 		Name:        name,
@@ -64,7 +69,8 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...str
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
 
-// "args" --> (roles, method) Requiere: nombre, controller, prehandler, queryParams(o nil), args(OPCIONAL) (roles, method)
+// "args" --> (roles, method, queryParams) Requiere: nombre, controller, prehandler, args(OPCIONAL) (roles, method, queryParams)
+// ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
 func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
 
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
@@ -72,6 +78,10 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 
 	roles, method, queryParams := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
+
+	if queryParams != "none" {
+		handler = withQueryParams(handler, queryParams)
+	}
 
 	endpoint := Endpoint{
 		Name:        name,
@@ -450,4 +460,23 @@ func ParseRolesAndMethod(args ...string) (roles, method, queryParams string) {
 	}
 
 	return roles, method, queryParams
+}
+
+func withQueryParams(next http.HandlerFunc, queryParams string) http.HandlerFunc {
+	requiredParams := strings.Split(queryParams, ",")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		missingParams := []string{}
+		for _, param := range requiredParams {
+			if r.URL.Query().Get(param) == "" {
+				missingParams = append(missingParams, param)
+			}
+		}
+
+		if len(missingParams) > 0 {
+			http.Error(w, fmt.Sprintf("Missing query parameters: %s", strings.Join(missingParams, ", ")), http.StatusBadRequest)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
