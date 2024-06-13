@@ -61,6 +61,7 @@ func (lt *lthttp) initDB(config interface{}) {
 }
 
 type EndpointSave struct {
+	ID          uint   `gorm:"column:id;primaryKey"`
 	Url         string `gorm:"column:url;size:100"`
 	Route       string `gorm:"column:route;size:100"`
 	Port        string `gorm:"column:port;size:6"`
@@ -68,6 +69,10 @@ type EndpointSave struct {
 	Roles       string `gorm:"column:roles;size:100"`
 	Project     string `gorm:"column:project;size:100"`
 	Description string `gorm:"column:desc;size:300"`
+}
+
+func (EndpointSave) TableName() string {
+	return "endpoints"
 }
 
 /*
@@ -108,12 +113,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 		}
 	} else {
 		// Запись найдена, обновляем её
-		existingLog.Url = logEntry.Url
-		existingLog.Type = logEntry.Type
-		existingLog.Roles = logEntry.Roles
-		existingLog.Project = logEntry.Project
-		existingLog.Description = logEntry.Description
-		if err := lt.DB.Save(&existingLog).Error; err != nil {
+		if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
 			log.Printf("Error updating endpoint log: %v", err)
 		} else {
 			log.Println("Endpoint log updated successfully")
