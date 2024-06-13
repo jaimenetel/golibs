@@ -133,9 +133,12 @@ func GetFunctionName(i interface{}) string {
 }
 
 func CompareIfEndpointLogsAreSame(existingLog, logEntry EndpointSave) bool {
-	return existingLog.Route != logEntry.Route || existingLog.Controller != logEntry.Controller ||
-		existingLog.Port != logEntry.Port || existingLog.Type != logEntry.Type ||
-		existingLog.Roles != logEntry.Roles || existingLog.Project != logEntry.Project ||
-		existingLog.Description != logEntry.Description
+	return existingLog.Route == logEntry.Route &&
+		existingLog.Controller == logEntry.Controller &&
+		existingLog.Port == logEntry.Port &&
+		existingLog.Type == logEntry.Type &&
+		existingLog.Roles == logEntry.Roles &&
+		existingLog.Project == logEntry.Project &&
+		existingLog.Description == logEntry.Description
 
 }
