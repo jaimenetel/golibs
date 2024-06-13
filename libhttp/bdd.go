@@ -13,6 +13,11 @@ import (
 
 var PROJECT_NAME string = "---"
 
+// Nombre de la tabla
+func (EndpointSave) TableName() string {
+	return "endpoints"
+}
+
 // initDB inicializa una conexión a la base de datos
 func (lt *lthttp) initDB(config interface{}) {
 	// Usar la reflexión para extraer campos de la estructura pasada
@@ -75,10 +80,6 @@ type EndpointSave struct {
 	Description string `gorm:"column:desc;size:300"`
 }
 
-func (EndpointSave) TableName() string {
-	return "endpoints"
-}
-
 // SaveEndpointLog guarda el registro del punto final en la base de datos
 func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 	logEntry := EndpointSave{
@@ -107,7 +108,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 		}
 	} else {
 		// Registro encontrado, verificar identidad
-		if CompareEndpointLogs(existingLog, logEntry) {
+		if !CompareIfEndpointLogsAreSame(existingLog, logEntry) {
 			// Los valores son diferentes, actualiza el registro
 			if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
 				log.Printf("Error updating endpoint log: %v", err)
@@ -131,18 +132,10 @@ func GetFunctionName(i interface{}) string {
 	return parts[len(parts)-1]
 }
 
-func CompareEndpointLogs(existingLog, logEntry EndpointSave) bool {
-	// Usamos reflexión para comparar entidades
-	vExisting := reflect.ValueOf(existingLog)
-	vLogEntry := reflect.ValueOf(logEntry)
-	t := reflect.TypeOf(logEntry)
+func CompareIfEndpointLogsAreSame(existingLog, logEntry EndpointSave) bool {
+	return existingLog.Route != logEntry.Route || existingLog.Controller != logEntry.Controller ||
+		existingLog.Port != logEntry.Port || existingLog.Type != logEntry.Type ||
+		existingLog.Roles != logEntry.Roles || existingLog.Project != logEntry.Project ||
+		existingLog.Description != logEntry.Description
 
-	for i := 0; i < t.NumField(); i++ {
-		fieldName := t.Field(i).Name
-		if vExisting.FieldByName(fieldName).Interface() != vLogEntry.FieldByName(fieldName).Interface() {
-			return true
-
-		}
-	}
-	return false
 }
