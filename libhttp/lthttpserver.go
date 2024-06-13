@@ -467,8 +467,9 @@ func withQueryParams(next http.HandlerFunc, queryParams string) http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		missingParams := []string{}
 		for _, param := range requiredParams {
-			if r.URL.Query().Get(param) == "" {
-				missingParams = append(missingParams, param)
+			paramName := strings.Split(param, ":")[0]
+			if r.URL.Query().Get(paramName) == "" {
+				missingParams = append(missingParams, paramName)
 			}
 		}
 
