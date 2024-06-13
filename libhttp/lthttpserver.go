@@ -39,7 +39,7 @@ var oncelt sync.Once
 func Ltinstance(config interface{}) *lthttp {
 	oncelt.Do(func() {
 		instance = &lthttp{}
-		instance.initDB(config)
+		instance.initDB(config) // Inicializar la bdd
 	})
 	return instance
 }
@@ -56,6 +56,7 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...str
 		Method:  method,
 	}
 	lt.Endpoints = append(lt.Endpoints, endpoint)
+
 }
 
 // "args" --> (roles, method)
@@ -79,6 +80,10 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 func (lt *lthttp) StartSinCOrs() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
+
+		// Guardar endpoint en bdd
+		lt.SaveEndpointLog(endpoint)
+
 		http.Handle(endpoint.Name, authMiddlewareRoleLog(endpoint.Handler, endpoint.Roles))
 	}
 }

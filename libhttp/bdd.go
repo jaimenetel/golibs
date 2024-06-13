@@ -63,40 +63,60 @@ func (lt *lthttp) initDB(config interface{}) {
 type EndpointSave struct {
 	Url         string `gorm:"primaryKey;size:100"`
 	Route       string `gorm:"size:100"`
+	Port        string `gorm:"size:6"`
 	Type        string `gorm:"size:15"`
+	Roles       string `gorm:"size:100"`
 	Project     string `gorm:"size:100"`
 	Description string `gorm:"size:300"`
 }
 
+/*
+endpoint := Endpoint{
+		Name:    name,
+		Handler: ohandler,
+		Roles:   roles,
+		Method:  method,
+	}
+
+*/
+
 // SaveEndpointLog сохраняет лог endpoint в базу данных
-func (lt *lthttp) SaveEndpointLog(url, route, tipo, project, desc string) {
-	var logEntry EndpointSave
-	result := lt.DB.First(&logEntry, "url = ?", url)
+func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
+	logEntry := EndpointSave{
+		Url:         "---", // Значение по умолчанию
+		Route:       endpoint.Name,
+		Port:        lt.Port,
+		Type:        endpoint.Method,
+		Roles:       endpoint.Roles,
+		Project:     "---", // Значение по умолчанию
+		Description: "---", // Значение по умолчанию
+	}
+
+	var existingLog EndpointSave
+	result := lt.DB.Where("route = ? AND port = ?", logEntry.Route, logEntry.Port).First(&existingLog)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			// Запись не найдена, создаем новую
-			logEntry = EndpointSave{
-				Url:         url,
-				Route:       route,
-				Type:        tipo,
-				Project:     project,
-				Description: desc,
-			}
 			if err := lt.DB.Create(&logEntry).Error; err != nil {
-				log.Printf("Error saving new endpoint log: %v", err)
+				log.Printf("Error creating new endpoint log: %v", err)
+			} else {
+				log.Println("New endpoint log created successfully")
 			}
 		} else {
 			log.Printf("Error querying endpoint log: %v", result.Error)
 		}
 	} else {
-		// Запись найдена, обновляем
-		logEntry.Route = route
-		logEntry.Type = tipo
-		logEntry.Project = project
-		logEntry.Description = desc
-		if err := lt.DB.Save(&logEntry).Error; err != nil {
+		// Запись найдена, обновляем её
+		existingLog.Url = logEntry.Url
+		existingLog.Type = logEntry.Type
+		existingLog.Roles = logEntry.Roles
+		existingLog.Project = logEntry.Project
+		existingLog.Description = logEntry.Description
+		if err := lt.DB.Save(&existingLog).Error; err != nil {
 			log.Printf("Error updating endpoint log: %v", err)
+		} else {
+			log.Println("Endpoint log updated successfully")
 		}
 	}
 }
