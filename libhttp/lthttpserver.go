@@ -23,9 +23,9 @@ type Endpoint struct {
 	Name        string
 	Handler     http.HandlerFunc
 	Controller  string
-	QueryParams string
 	Roles       string
 	Method      string
+	QueryParams string
 }
 
 type lthttp struct {
@@ -47,14 +47,10 @@ func Ltinstance(config interface{}) *lthttp {
 }
 
 // Método para añadir endpoints y roles a lthttp. "args" --> (roles, method) Requiere: nombre, controller, queryParams(o nil), args(OPCIONAL) (roles, method)
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, queryParams string, args ...string) {
+func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
 
-	roles, method := ParseRolesAndMethod(args...)
+	roles, method, queryParams := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
-
-	if queryParams == "" {
-		queryParams = "none"
-	}
 
 	endpoint := Endpoint{
 		Name:        name,
@@ -69,17 +65,13 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, queryParams
 }
 
 // "args" --> (roles, method) Requiere: nombre, controller, prehandler, queryParams(o nil), args(OPCIONAL) (roles, method)
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, queryParams string, args ...string) {
+func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
 
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
 
-	roles, method := ParseRolesAndMethod(args...)
+	roles, method, queryParams := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
-
-	if queryParams == "" {
-		queryParams = "none"
-	}
 
 	endpoint := Endpoint{
 		Name:        name,
@@ -439,19 +431,23 @@ func ConfigMethodType(next http.Handler, method string) http.Handler {
 	})
 }
 
-// ParseMethodAndRoles parses input arguments and returns method and roles. Si todo está vacio, nos añade roles "---" Method por defecto es "POST"
-func ParseRolesAndMethod(args ...string) (roles, method string) {
+// ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
+func ParseRolesAndMethod(args ...string) (roles, method, queryParams string) {
+	roles = "---"        // Default value
+	method = "POST"      // Default value
+	queryParams = "none" // Default value
 
-	if len(args) == 0 {
-		roles = "---"
-	} else if len(args) == 1 {
-		roles = args[0]
-		if roles == "" {
-			roles = "---"
+	for _, arg := range args {
+		if strings.Contains(arg, ":") {
+			queryParams = arg
+		} else if method == "POST" && (arg == "GET" || arg == "POST" || arg == "PUT" || arg == "DELETE") {
+			// If method is not set and arg is a valid HTTP method, set it as method
+			method = arg
+		} else {
+			// Otherwise, set it as roles
+			roles = arg
 		}
-	} else if len(args) == 2 {
-		roles = args[0]
-		method = args[1]
 	}
-	return
+
+	return roles, method, queryParams
 }
