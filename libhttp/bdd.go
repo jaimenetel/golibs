@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"runtime"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -65,6 +66,7 @@ func (lt *lthttp) initDB(config interface{}) {
 type EndpointSave struct {
 	ID          uint   `gorm:"column:id;primaryKey"`
 	Route       string `gorm:"column:route;size:100"`
+	Controller  string `gorm:"column:controller;size:100"`
 	Port        string `gorm:"column:port;size:6"`
 	Type        string `gorm:"column:type;size:15"`
 	Roles       string `gorm:"column:roles;size:100"`
@@ -80,6 +82,7 @@ func (EndpointSave) TableName() string {
 func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 	logEntry := EndpointSave{
 		Route:       endpoint.Name,
+		Controller:  endpoint.Controller,
 		Port:        lt.Port,
 		Type:        endpoint.Method,
 		Roles:       endpoint.Roles,
@@ -114,4 +117,9 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 // Set nombre del proyecto
 func (lt *lthttp) SetProjectName(name string) {
 	PROJECT_NAME = name
+}
+
+// getFunctionName obtener nombre del controller
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }

@@ -20,10 +20,11 @@ import (
 // var secretKey string = "64ece9a47243209e7f8739bde3ff17b4ea815c777fe0a4bdfadb889db9900340"
 
 type Endpoint struct {
-	Name    string
-	Handler http.HandlerFunc
-	Roles   string
-	Method  string
+	Name       string
+	Handler    http.HandlerFunc
+	Controller string
+	Roles      string
+	Method     string
 }
 
 type lthttp struct {
@@ -48,12 +49,14 @@ func Ltinstance(config interface{}) *lthttp {
 func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
 
 	roles, method := ParseRolesAndMethod(args...)
+	controllerName := GetFunctionName(handler)
 
 	endpoint := Endpoint{
-		Name:    name,
-		Handler: handler,
-		Roles:   roles,
-		Method:  method,
+		Name:       name,
+		Handler:    handler,
+		Controller: controllerName,
+		Roles:      roles,
+		Method:     method,
 	}
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 
@@ -66,12 +69,14 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 	ohandler := prehandler(handler)
 
 	roles, method := ParseRolesAndMethod(args...)
+	controllerName := GetFunctionName(handler)
 
 	endpoint := Endpoint{
-		Name:    name,
-		Handler: ohandler,
-		Roles:   roles,
-		Method:  method,
+		Name:       name,
+		Handler:    ohandler,
+		Controller: controllerName,
+		Roles:      roles,
+		Method:     method,
 	}
 
 	lt.Endpoints = append(lt.Endpoints, endpoint)
