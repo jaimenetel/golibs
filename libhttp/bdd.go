@@ -3,28 +3,52 @@ package libhttp
 import (
 	"fmt"
 	"log"
+	"reflect"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-type DatabaseConfig struct {
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBName     string
-}
-
 // initDB инициализирует соединение с базой данных
-func (lt *lthttp) initDB(config *DatabaseConfig) {
+func (lt *lthttp) initDB(config interface{}) {
+	// Используем reflection для извлечения полей из переданной структуры
+	val := reflect.ValueOf(config)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	var dbUser, dbPassword, dbHost, dbPort, dbName string
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldName := val.Type().Field(i).Name
+
+		switch fieldName {
+		case "DBUser":
+			dbUser = field.String()
+		case "DBPassword":
+			dbPassword = field.String()
+		case "DBHost":
+			dbHost = field.String()
+		case "DBPort":
+			dbPort = field.String()
+		case "DBName":
+			// dbName = field.String()
+			dbName = "swagger"
+		}
+	}
+
+	// Проверяем наличие всех необходимых полей
+	if dbUser == "" || dbPassword == "" || dbHost == "" || dbPort == "" {
+		log.Fatalf("Incomplete database configuration")
+	}
+
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-		config.DBUser,
-		config.DBPassword,
-		config.DBHost,
-		config.DBPort,
-		// config.DBName,
-		"swagger",
+		dbUser,
+		dbPassword,
+		dbHost,
+		dbPort,
+		dbName,
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -32,7 +56,7 @@ func (lt *lthttp) initDB(config *DatabaseConfig) {
 	}
 	lt.DB = db
 
-	// Автоматическая миграция структуры EndpointLog
+	// Автоматическая миграция структуры EndpointSave
 	lt.DB.AutoMigrate(&EndpointSave{})
 }
 

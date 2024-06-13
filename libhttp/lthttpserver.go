@@ -36,7 +36,7 @@ var instance *lthttp
 var oncelt sync.Once
 
 // DatabaseConfig = user, password, host, port, name
-func Ltinstance(config *DatabaseConfig) *lthttp {
+func Ltinstance(config interface{}) *lthttp {
 	oncelt.Do(func() {
 		instance = &lthttp{}
 		instance.initDB(config)
