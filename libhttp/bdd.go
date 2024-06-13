@@ -111,6 +111,6 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 	}
 }
 
-func SetProjectName(name string) {
+func (lt *lthttp) SetProjectName(name string) {
 	PROJECT_NAME = name
 }
