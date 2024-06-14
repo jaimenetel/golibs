@@ -452,7 +452,7 @@ func ParseRolesAndMethod(args ...string) (roles, method, queryParams, body strin
 	body = "{}"          // Default value
 
 	for _, arg := range args {
-		if strings.Contains(arg, ":") {
+		if strings.Contains(arg, ":") && !strings.Contains(arg, "{") && !strings.Contains(arg, "}") {
 			queryParams = arg
 		} else if arg == "GET" || arg == "POST" || arg == "PUT" || arg == "DELETE" {
 			// If arg is a valid HTTP method, set it as method
