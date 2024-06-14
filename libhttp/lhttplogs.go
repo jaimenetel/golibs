@@ -75,6 +75,7 @@ type EndpointSave struct {
 	Controller  string `gorm:"column:controller;size:100"`
 	Port        string `gorm:"column:port;size:6"`
 	QueryParams string `gorm:"column:queryparams;size:100"`
+	Body        string `gorm:"column:body;size:300"`
 	Type        string `gorm:"column:type;size:15"`
 	Roles       string `gorm:"column:roles;size:100"`
 	Project     string `gorm:"column:project;size:100"`
@@ -89,6 +90,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 		Controller:  endpoint.Controller,
 		Port:        lt.Port,
 		QueryParams: endpoint.QueryParams,
+		Body:        endpoint.Body,
 		Type:        endpoint.Method,
 		Roles:       endpoint.Roles,
 		Project:     PROJECT_NAME,

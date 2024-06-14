@@ -26,6 +26,7 @@ type Endpoint struct {
 	Roles       string
 	Method      string
 	QueryParams string
+	Body        string
 }
 
 type lthttp struct {
@@ -50,7 +51,7 @@ func Ltinstance(config interface{}) *lthttp {
 // ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
 func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
 
-	roles, method, queryParams := ParseRolesAndMethod(args...)
+	roles, method, queryParams, body := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
 
 	if queryParams != "none" {
@@ -62,6 +63,7 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...str
 		Handler:     handler,
 		Controller:  controllerName,
 		QueryParams: queryParams,
+		Body:        body,
 		Roles:       roles,
 		Method:      method,
 	}
@@ -76,7 +78,7 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
 
-	roles, method, queryParams := ParseRolesAndMethod(args...)
+	roles, method, queryParams, body := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
 
 	if queryParams != "none" {
@@ -88,6 +90,7 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 		Handler:     ohandler,
 		Controller:  controllerName,
 		QueryParams: queryParams,
+		Body:        body,
 		Roles:       roles,
 		Method:      method,
 	}
@@ -442,24 +445,28 @@ func ConfigMethodType(next http.Handler, method string) http.Handler {
 }
 
 // ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
-func ParseRolesAndMethod(args ...string) (roles, method, queryParams string) {
+func ParseRolesAndMethod(args ...string) (roles, method, queryParams, body string) {
 	roles = "---"        // Default value
 	method = "POST"      // Default value
 	queryParams = "none" // Default value
+	body = "{}"          // Default value
 
 	for _, arg := range args {
 		if strings.Contains(arg, ":") {
 			queryParams = arg
-		} else if method == "POST" && (arg == "GET" || arg == "POST" || arg == "PUT" || arg == "DELETE") {
-			// If method is not set and arg is a valid HTTP method, set it as method
+		} else if arg == "GET" || arg == "POST" || arg == "PUT" || arg == "DELETE" {
+			// If arg is a valid HTTP method, set it as method
 			method = arg
+		} else if strings.HasPrefix(arg, "{") && strings.HasSuffix(arg, "}") {
+			// If arg is a valid JSON object, set it as body
+			body = arg
 		} else {
 			// Otherwise, set it as roles
 			roles = arg
 		}
 	}
 
-	return roles, method, queryParams
+	return roles, method, queryParams, body
 }
 
 func withQueryParams(next http.HandlerFunc, queryParams string) http.HandlerFunc {
