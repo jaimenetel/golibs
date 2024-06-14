@@ -145,6 +145,7 @@ func CompareIfEndpointLogsAreSame(existingLog, logEntry EndpointSave) bool {
 		existingLog.Roles == logEntry.Roles &&
 		existingLog.Project == logEntry.Project &&
 		existingLog.Description == logEntry.Description &&
-		existingLog.QueryParams == logEntry.QueryParams
+		existingLog.QueryParams == logEntry.QueryParams &&
+		existingLog.Body == logEntry.Body
 
 }
