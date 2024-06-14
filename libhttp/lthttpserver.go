@@ -474,7 +474,7 @@ func withQueryParams(next http.HandlerFunc, queryParams string) http.HandlerFunc
 		}
 
 		if len(missingParams) > 0 {
-			http.Error(w, fmt.Sprintf("Missing query parameters: %s", strings.Join(missingParams, ", ")), http.StatusBadRequest)
+			// http.Error(w, fmt.Sprintf("Missing query parameters: %s", strings.Join(missingParams, ", ")), http.StatusBadRequest)
 			message := ("Missing query parameters: " + strings.Join(missingParams, ", "))
 			RespondWithError(w, http.StatusMethodNotAllowed, message)
 			return
