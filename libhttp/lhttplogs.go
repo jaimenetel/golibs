@@ -20,6 +20,7 @@ func (EndpointSave) TableName() string {
 }
 
 // Obtener la conexión con la base de datos
+// DatabaseConfig = user, password, host, port, name
 func (lt *lthttp) SetConnectionDBSwagger(config interface{}) {
 	lt.initDB(config)
 	CONNECTION_SWAGGER = true

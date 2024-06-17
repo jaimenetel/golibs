@@ -38,7 +38,6 @@ type lthttp struct {
 var instance *lthttp
 var oncelt sync.Once
 
-// DatabaseConfig = user, password, host, port, name
 func Ltinstance() *lthttp {
 	oncelt.Do(func() {
 		instance = &lthttp{}
