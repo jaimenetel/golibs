@@ -21,13 +21,13 @@ func (EndpointSave) TableName() string {
 
 // Obtener la conexión con la base de datos
 // DatabaseConfig = user, password, host, port, name
-func (lt *lthttp) SetConnectionDBSwagger(config interface{}) {
+func (lt *Lthttp) SetConnectionDBSwagger(config interface{}) {
 	lt.initDB(config)
 	CONNECTION_FOR_SAVE_ENDPOINTS_ON_DB = true
 }
 
 // initDB inicializa una conexión a la base de datos
-func (lt *lthttp) initDB(config interface{}) {
+func (lt *Lthttp) initDB(config interface{}) {
 	// Usar la reflexión para extraer campos de la estructura pasada
 	val := reflect.ValueOf(config)
 	if val.Kind() == reflect.Ptr {
@@ -91,7 +91,7 @@ type EndpointSave struct {
 }
 
 // SaveEndpointLog guarda el registro del punto final en la base de datos
-func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
+func (lt *Lthttp) SaveEndpointLog(endpoint Endpoint) {
 
 	// Verificar si el endpoint contiene 'swagger' en el Route
 	if strings.Contains(endpoint.Name, "swagger") {
@@ -139,7 +139,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 }
 
 // Set nombre del proyecto
-func (lt *lthttp) SetProjectName(name string) {
+func (lt *Lthttp) SetProjectName(name string) {
 	PROJECT_NAME = name
 }
 

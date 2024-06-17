@@ -29,18 +29,18 @@ type Endpoint struct {
 	Body        string
 }
 
-type lthttp struct {
+type Lthttp struct {
 	Port      string
 	Endpoints []Endpoint
 	DBSwagger *gorm.DB // Connect con base de datos
 }
 
-var instance *lthttp
+var instance *Lthttp
 var oncelt sync.Once
 
-func Ltinstance() *lthttp {
+func Ltinstance() *Lthttp {
 	oncelt.Do(func() {
-		instance = &lthttp{}
+		instance = &Lthttp{}
 
 	})
 	return instance
@@ -48,7 +48,7 @@ func Ltinstance() *lthttp {
 
 // "args" --> (roles, method, queryParams) Requiere: nombre, controller, args(OPCIONAL) (roles, method, queryParams)
 // ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
-func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
+func (lt *Lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...string) {
 
 	roles, method, queryParams, body := ParseRolesAndMethod(args...)
 	controllerName := GetFunctionName(handler)
@@ -72,7 +72,7 @@ func (lt *lthttp) AddEndpoint(name string, handler http.HandlerFunc, args ...str
 
 // "args" --> (roles, method, queryParams) Requiere: nombre, controller, prehandler, args(OPCIONAL) (roles, method, queryParams)
 // ParseRolesAndMethod parses input arguments and returns roles, method, and queryParams. If everything is empty, it adds roles "---", method "POST" and queryParams "none".
-func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
+func (lt *Lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, prehandler func(http.HandlerFunc) http.HandlerFunc, args ...string) {
 
 	// El prehandler es un middleware que toma y devuelve un http.HandlerFunc
 	ohandler := prehandler(handler)
@@ -97,7 +97,7 @@ func (lt *lthttp) AddEndpointPreHandler(name string, handler http.HandlerFunc, p
 	lt.Endpoints = append(lt.Endpoints, endpoint)
 }
 
-func (lt *lthttp) StartSinCOrs() {
+func (lt *Lthttp) StartSinCOrs() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
 
@@ -114,7 +114,7 @@ func (lt *lthttp) StartSinCOrs() {
 
 	}
 }
-func (lt *lthttp) Start() {
+func (lt *Lthttp) Start() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
 
@@ -136,7 +136,7 @@ func (lt *lthttp) Start() {
 	}
 }
 
-func (lt *lthttp) StartRenovado() {
+func (lt *Lthttp) StartRenovado() {
 	for _, endpoint := range lt.Endpoints {
 		fmt.Println(endpoint)
 		// Encadena los middlewares aquí
