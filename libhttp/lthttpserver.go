@@ -108,7 +108,7 @@ func (lt *lthttp) StartSinCOrs() {
 		}
 
 		// Guardar endpoint en bdd
-		if CONNECTION_SWAGGER {
+		if CONNECTION_FOR_SAVE_ENDPOINTS_ON_DB {
 			lt.SaveEndpointLog(endpoint)
 		}
 
@@ -126,7 +126,7 @@ func (lt *lthttp) Start() {
 		}
 
 		// Guardar endpoint en bdd
-		if CONNECTION_SWAGGER {
+		if CONNECTION_FOR_SAVE_ENDPOINTS_ON_DB {
 			lt.SaveEndpointLog(endpoint)
 		}
 

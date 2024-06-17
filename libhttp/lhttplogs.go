@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var PROJECT_NAME string = "---"
-var CONNECTION_SWAGGER = false
+var PROJECT_NAME string = "---"                 // nombre del proyecto
+var CONNECTION_FOR_SAVE_ENDPOINTS_ON_DB = false // estado conexión para guardar endpoints
 
 // Nombre de la tabla
 func (EndpointSave) TableName() string {
@@ -23,7 +23,7 @@ func (EndpointSave) TableName() string {
 // DatabaseConfig = user, password, host, port, name
 func (lt *lthttp) SetConnectionDBSwagger(config interface{}) {
 	lt.initDB(config)
-	CONNECTION_SWAGGER = true
+	CONNECTION_FOR_SAVE_ENDPOINTS_ON_DB = true
 }
 
 // initDB inicializa una conexión a la base de datos
