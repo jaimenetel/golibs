@@ -3,6 +3,8 @@ package respondwithjson
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
+	"strings"
 )
 
 type JsonResponse struct {
@@ -51,4 +53,41 @@ func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interfac
 	}
 
 	return true
+}
+
+// Esta función obtiene un objeto y devuelve este mismo objeto en formato json, como un string
+func GetStructTypes(input interface{}) (string, error) {
+	val := reflect.ValueOf(input)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typeOfS := val.Type()
+
+	fields := []map[string]string{}
+	for i := 0; i < val.NumField(); i++ {
+		field := typeOfS.Field(i)
+		fieldType := field.Type.String()
+
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			jsonTag = field.Name
+		} else {
+			jsonTag = strings.Split(jsonTag, ",")[0]
+		}
+
+		fields = append(fields, map[string]string{jsonTag: fieldType})
+	}
+
+	fieldTypes := make(map[string]string)
+	for _, field := range fields {
+		for k, v := range field {
+			fieldTypes[k] = v
+		}
+	}
+
+	jsonData, err := json.MarshalIndent(fieldTypes, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
 }
