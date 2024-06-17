@@ -19,8 +19,8 @@ func (EndpointSave) TableName() string {
 }
 
 // Obtener la conexión con la base de datos
-func SetConnectionDBSwagger(config interface{}) {
-	instance.initDB(config)
+func (lt *lthttp) SetConnectionDBSwagger(config interface{}) {
+	lt.initDB(config)
 }
 
 // initDB inicializa una conexión a la base de datos
