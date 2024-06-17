@@ -32,17 +32,17 @@ type Endpoint struct {
 type lthttp struct {
 	Port      string
 	Endpoints []Endpoint
-	DB        *gorm.DB // Connect con base de datos
+	DBSwagger *gorm.DB // Connect con base de datos
 }
 
 var instance *lthttp
 var oncelt sync.Once
 
 // DatabaseConfig = user, password, host, port, name
-func Ltinstance(config interface{}) *lthttp {
+func Ltinstance() *lthttp {
 	oncelt.Do(func() {
 		instance = &lthttp{}
-		instance.initDB(config) // Inicializar la bdd
+
 	})
 	return instance
 }

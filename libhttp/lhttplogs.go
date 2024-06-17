@@ -18,6 +18,11 @@ func (EndpointSave) TableName() string {
 	return "endpoints"
 }
 
+// Obtener la conexión con la base de datos
+func SetConnectionDBSwagger(config interface{}) {
+	instance.initDB(config)
+}
+
 // initDB inicializa una conexión a la base de datos
 func (lt *lthttp) initDB(config interface{}) {
 	// Usar la reflexión para extraer campos de la estructura pasada
@@ -63,10 +68,10 @@ func (lt *lthttp) initDB(config interface{}) {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	lt.DB = db
+	lt.DBSwagger = db
 
 	// Migración automática de la estructura EndpointSave
-	lt.DB.AutoMigrate(&EndpointSave{})
+	lt.DBSwagger.AutoMigrate(&EndpointSave{})
 }
 
 type EndpointSave struct {
@@ -98,12 +103,12 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 	}
 
 	var existingLog EndpointSave
-	result := lt.DB.Where("route = ? AND port = ?", logEntry.Route, logEntry.Port).First(&existingLog)
+	result := lt.DBSwagger.Where("route = ? AND port = ?", logEntry.Route, logEntry.Port).First(&existingLog)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			// Registro no encontrado, cree uno nuevo
-			if err := lt.DB.Create(&logEntry).Error; err != nil {
+			if err := lt.DBSwagger.Create(&logEntry).Error; err != nil {
 				log.Printf("Error creating new endpoint log: %v", err)
 			} else {
 				log.Println("New endpoint log created successfully")
@@ -115,7 +120,7 @@ func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 		// Registro encontrado, verificar identidad
 		if !CompareIfEndpointLogsAreSame(existingLog, logEntry) {
 			// Los valores son diferentes, actualiza el registro
-			if err := lt.DB.Model(&existingLog).Updates(logEntry).Error; err != nil {
+			if err := lt.DBSwagger.Model(&existingLog).Updates(logEntry).Error; err != nil {
 				log.Printf("Error updating endpoint log: %v", err)
 			} else {
 				log.Println("Endpoint log updated successfully")
