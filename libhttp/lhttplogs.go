@@ -93,6 +93,12 @@ type EndpointSave struct {
 // SaveEndpointLog guarda el registro del punto final en la base de datos
 func (lt *lthttp) SaveEndpointLog(endpoint Endpoint) {
 
+	// Verificar si el endpoint contiene 'swagger' en el Route
+	if strings.Contains(endpoint.Name, "swagger") {
+		log.Printf("Skipping logging of endpoint %s because it contains 'swagger'", endpoint.Name)
+		return
+	}
+
 	logEntry := EndpointSave{
 		Route:       endpoint.Name,
 		Controller:  endpoint.Controller,
