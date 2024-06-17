@@ -109,7 +109,10 @@ func (lt *lthttp) StartSinCOrs() {
 		}
 
 		// Guardar endpoint en bdd
-		lt.SaveEndpointLog(endpoint)
+		if CONNECTION_SWAGGER {
+			lt.SaveEndpointLog(endpoint)
+		}
+
 	}
 }
 func (lt *lthttp) Start() {
@@ -124,7 +127,9 @@ func (lt *lthttp) Start() {
 		}
 
 		// Guardar endpoint en bdd
-		lt.SaveEndpointLog(endpoint)
+		if CONNECTION_SWAGGER {
+			lt.SaveEndpointLog(endpoint)
+		}
 
 		handlerWithMiddleware = ConfigMethodType(handlerWithMiddleware, endpoint.Method)
 

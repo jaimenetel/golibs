@@ -12,6 +12,7 @@ import (
 )
 
 var PROJECT_NAME string = "---"
+var CONNECTION_SWAGGER = false
 
 // Nombre de la tabla
 func (EndpointSave) TableName() string {
@@ -21,6 +22,7 @@ func (EndpointSave) TableName() string {
 // Obtener la conexión con la base de datos
 func (lt *lthttp) SetConnectionDBSwagger(config interface{}) {
 	lt.initDB(config)
+	CONNECTION_SWAGGER = true
 }
 
 // initDB inicializa una conexión a la base de datos
