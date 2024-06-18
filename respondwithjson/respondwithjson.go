@@ -2,18 +2,20 @@ package respondwithjson
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"reflect"
 	"strings"
 )
 
+// JsonResponse es la estructura de la respuesta en formato JSON
 type JsonResponse struct {
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
 }
 
-// Constructor para JsonResponse
+// Constructor para la respuesta JsonResponse
 func NewJsonResponse(message string, data interface{}, err string) JsonResponse {
 	return JsonResponse{
 		Message: message,
@@ -22,40 +24,55 @@ func NewJsonResponse(message string, data interface{}, err string) JsonResponse 
 	}
 }
 
-// Responder con JSON detallado
+// Responder con el formato JSON
 func RespondWithJSON(w http.ResponseWriter, statusCode int, response JsonResponse) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
 }
 
-// Responder con JSON simple
+// Responder con JSON simple (simplemente data)
 func RespondWithJSONSimple(w http.ResponseWriter, statusCode int, data interface{}) {
 	response := NewJsonResponse("", data, "")
 	RespondWithJSON(w, statusCode, response)
 }
 
+// Función para enviar una respuesta exitosa
+func RespondWithSuccess(w http.ResponseWriter, data interface{}) {
+	response := NewJsonResponse("Success", data, "")
+	RespondWithJSON(w, http.StatusOK, response)
+}
+
+// Función para enviar una respuesta con el error
+func RespondWithError(w http.ResponseWriter, statusCode int, err error) {
+	var errMsg, message string
+	if err != nil {
+		errMsg = err.Error()
+		message = "ERROR"
+	}
+	response := NewJsonResponse(message, nil, errMsg)
+	RespondWithJSON(w, statusCode, response)
+}
+
 // Verificar y responder con JSON correcto
-func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interface{}) bool {
+func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interface{}) {
 	if r.Body == nil {
-		response := NewJsonResponse("No request body provided", nil, "")
-		RespondWithJSON(w, http.StatusBadRequest, response)
-		return false
+		err := errors.New("request body is empty")
+		RespondWithError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Evita la decodificación si JSON contiene campos que no están en la estructura
 	err := decoder.Decode(object)
 	if err != nil {
-		response := NewJsonResponse("Error parsing JSON", nil, err.Error())
-		RespondWithJSON(w, http.StatusBadRequest, response)
-		return false
+		RespondWithError(w, http.StatusBadRequest, err)
+		return
 	}
-
-	return true
 }
 
-// Esta función obtiene un objeto y devuelve este mismo objeto en formato json, como un string
+// Esta función obtiene un objeto y devuelve este mismo objeto en formato json, y los tipos de variables del objeto. Por ejemplo: "name": "string"
+// Ejemplo de uso: var json := GetStructTypes(ExampleObject{})
 func GetStructTypes(input interface{}) (string, error) {
 	val := reflect.ValueOf(input)
 	if val.Kind() == reflect.Ptr {
@@ -86,6 +103,15 @@ func GetStructTypes(input interface{}) (string, error) {
 	}
 
 	jsonData, err := json.MarshalIndent(fieldTypes, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
+}
+
+// Esta función convierte un objeto (o un modelo de objeto: ej. ExampleModel{}) a un formato JSON
+func ConvertObjectToJSON(obj interface{}) (string, error) {
+	jsonData, err := json.Marshal(obj)
 	if err != nil {
 		return "", err
 	}
