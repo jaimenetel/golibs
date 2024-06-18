@@ -10,6 +10,22 @@ import (
 func NowAsString() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
+
+// Obtener la fecha y la hora actual (Devuelve string)
+func GetCurrentDateTime() string {
+	return time.Now().Format("2006-01-02 15:04:05")
+}
+
+// Obtener la fecha actual (Devuelve string)
+func GetCurrentDate() string {
+	return time.Now().Format("2006-01-02")
+}
+
+// Obtener la hora actual (Devuelve string)
+func GetCurrentTime() string {
+	return time.Now().Format("15:04:05")
+}
+
 func Cinfo(print bool) string {
 	pc, file, line, ok := runtime.Caller(1) // El argumento 1 obtiene la información del llamador
 	if !ok {
