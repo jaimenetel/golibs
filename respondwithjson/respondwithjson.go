@@ -55,6 +55,12 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error) {
 	RespondWithJSON(w, statusCode, response)
 }
 
+// Responder con JSON simple (simplemente data)
+func RespondWithJSONMessageError(w http.ResponseWriter, statusCode int, messageError string) {
+	response := NewJsonResponse("", "", messageError)
+	RespondWithJSON(w, statusCode, response)
+}
+
 // Verificar y responder con JSON correcto
 func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interface{}) error {
 	if r.Body == nil {
