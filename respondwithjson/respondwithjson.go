@@ -56,20 +56,19 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error) {
 }
 
 // Verificar y responder con JSON correcto
-func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interface{}) {
+func CheckAndRespondJSON(w http.ResponseWriter, r *http.Request, object interface{}) error {
 	if r.Body == nil {
 		err := errors.New("request body is empty")
-		RespondWithError(w, http.StatusBadRequest, err)
-		return
+		return err
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Evita la decodificación si JSON contiene campos que no están en la estructura
 	err := decoder.Decode(object)
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, err)
-		return
+		return err
 	}
+	return nil
 }
 
 // Esta función obtiene un objeto y devuelve este mismo objeto en formato json, y los tipos de variables del objeto. Por ejemplo: "name": "string"
