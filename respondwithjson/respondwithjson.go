@@ -3,6 +3,7 @@ package respondwithjson
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -116,4 +117,25 @@ func ConvertObjectToJSON(obj interface{}) (string, error) {
 		return "", err
 	}
 	return string(jsonData), nil
+}
+
+// ValidateFields comprueba que todos los campos pasados ​​no estén vacíos ni contengan espacios. (string, int)
+func ValidateFields(fields ...interface{}) error {
+	for _, field := range fields {
+		value := reflect.ValueOf(field)
+		switch value.Kind() {
+		case reflect.String:
+			str := value.String()
+			if strings.TrimSpace(str) == "" || strings.Contains(str, " ") {
+				return fmt.Errorf("fields cannot be empty or contain spaces")
+			}
+		case reflect.Int:
+			if value.Int() == 0 {
+				return fmt.Errorf("integer fields cannot be zero")
+			}
+		default:
+			return fmt.Errorf("unsupported field type: %s", value.Kind())
+		}
+	}
+	return nil
 }
