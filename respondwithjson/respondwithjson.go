@@ -131,11 +131,11 @@ func ValidateFields(fields ...interface{}) error {
 		switch value.Kind() {
 		case reflect.String:
 			str := value.String()
-			if strings.TrimSpace(str) == "" || strings.Contains(str, " ") {
+			if strings.TrimSpace(str) == "" || value.IsZero() {
 				return fmt.Errorf("fields cannot be empty or contain spaces")
 			}
 		case reflect.Int:
-			if value.Int() == 0 {
+			if value.Int() == 0 || value.IsZero() {
 				return fmt.Errorf("integer fields cannot be zero")
 			}
 		default:
