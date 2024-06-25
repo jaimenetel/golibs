@@ -401,7 +401,7 @@ func authMiddlewareRoleLog(next http.Handler, roles string) http.Handler {
 			role := myClaims["role"].(string)
 			fmt.Println("Roles: ", role)
 			if roles != "---" {
-				if !CheckRoles(role, roles) {
+				if !CheckRoles(role, roles+","+"ROLE_ADMIN,ROLE_ALL") {
 					// http.Error(w, "Acceso no autorizado", http.StatusForbidden)
 					RespondWithError(w, http.StatusForbidden, "Acceso no autorizado")
 					return
