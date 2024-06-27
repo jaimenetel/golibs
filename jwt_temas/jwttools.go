@@ -109,3 +109,18 @@ func GetRolesFromBearerToken(token string) []string {
 	roles := strings.Split(role, ",")
 	return roles
 }
+func GetRolesFromBearerTokenString(token string) string {
+
+	myClaims, err := DecodificarJWT2(token)
+	if err != nil {
+		fmt.Println("Error al decodificar el token:", err)
+	}
+	parts := myClaims["cliuser"].(string)
+	if parts == "" {
+		parts = myClaims["sub"].(string)
+	}
+
+	role := "," + myClaims["role"].(string) + ","
+
+	return role
+}
