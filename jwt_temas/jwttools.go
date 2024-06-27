@@ -96,17 +96,27 @@ func GetVerifUserFromBearerToken(token string) string {
 	return parts
 }
 func GetRolesFromBearerToken(token string) []string {
-
 	myClaims, err := DecodificarJWT2(token)
 	if err != nil {
 		fmt.Println("Error al decodificar el token:", err)
-	}
-	parts := myClaims["cliuser"].(string)
-	if parts == "" {
-		parts = myClaims["sub"].(string)
+		return nil
 	}
 
-	role := myClaims["role"].(string)
+	parts, ok := myClaims["cliuser"].(string)
+	if !ok || parts == "" {
+		parts, ok = myClaims["sub"].(string)
+		if !ok {
+			fmt.Println("Error: 'sub' claim is missing or not a string")
+			return nil
+		}
+	}
+
+	role, ok := myClaims["role"].(string)
+	if !ok {
+		fmt.Println("Error: 'role' claim is missing or not a string")
+		return nil
+	}
+
 	roles := strings.Split(role, ",")
 	return roles
 }
@@ -129,6 +139,9 @@ func GetRolesFromBearerTokenString(token string) string {
 // CompareRolesWithToken comprueba si hay intersecciones entre roles de una cadena y una lista de cadenas
 func CompareRolesWithToken(roleString, token string) bool {
 	roles := GetRolesFromBearerToken(token)
+	if roles == nil {
+		return false
+	}
 	// Divide la cadena de roles en una lista de cadenas
 	roleList := strings.Split(roleString, ",")
 	// Comprobar intersección de lista
