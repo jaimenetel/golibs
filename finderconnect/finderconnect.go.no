@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/spf13/viper"
 )
 
 var URLgetIp string = "http://172.17.0.56:8701/findip?find=%s"
 var URLgetLtm string = "http://172.17.0.56:8701/findltm?find=%s"
 var URLgetDisp string = "http://172.17.0.56:8701/finddispositivo?find=%s"
-var ServerURL string
 
 type Findiccid struct {
 	Iccid  string `gorm:"column:iccid"`
@@ -83,7 +80,6 @@ func GetLTM(find string) ([]Findiccid, error) {
 	return resti, nil
 }
 func GetDisp(find string) (Dispositivo, error) {
-
 	URL := fmt.Sprintf(URLgetDisp, find)
 	result, err := FetchURL(URL)
 	if err != nil {
@@ -97,8 +93,4 @@ func GetDisp(find string) (Dispositivo, error) {
 		return Dispositivo{}, err
 	}
 	return dispositivo, nil
-}
-func init() {
-	fmt.Println("Finderconnect init")
-	ServerURL = viper.GetString("finder.server")
 }
