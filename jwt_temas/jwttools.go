@@ -1,6 +1,7 @@
 package jwt_temas
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -95,17 +96,27 @@ func GetVerifUserFromBearerToken(token string) string {
 	return parts
 }
 func GetRolesFromBearerToken(token string) []string {
-
 	myClaims, err := DecodificarJWT2(token)
 	if err != nil {
 		fmt.Println("Error al decodificar el token:", err)
-	}
-	parts := myClaims["cliuser"].(string)
-	if parts == "" {
-		parts = myClaims["sub"].(string)
+		return nil
 	}
 
-	role := myClaims["role"].(string)
+	parts, ok := myClaims["cliuser"].(string)
+	if !ok || parts == "" {
+		parts, ok = myClaims["sub"].(string)
+		if !ok {
+			fmt.Println("Error: 'sub' claim is missing or not a string")
+			return nil
+		}
+	}
+
+	role, ok := myClaims["role"].(string)
+	if !ok {
+		fmt.Println("Error: 'role' claim is missing or not a string")
+		return nil
+	}
+
 	roles := strings.Split(role, ",")
 	return roles
 }
@@ -123,4 +134,79 @@ func GetRolesFromBearerTokenString(token string) string {
 	role := "," + myClaims["role"].(string) + ","
 
 	return role
+}
+
+// CompareRolesWithToken comprueba si hay intersecciones entre roles de una cadena y una lista de cadenas
+func CompareRolesWithToken(roleString, token string) bool {
+	roles := GetRolesFromBearerToken(token)
+	if roles == nil {
+		return false
+	}
+	// Divide la cadena de roles en una lista de cadenas
+	roleList := strings.Split(roleString, ",")
+	// Comprobar intersección de lista
+	for _, role := range roleList {
+		for _, r := range roles {
+			if strings.TrimSpace(role) == strings.TrimSpace(r) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Funcion recibe (token, user(payload string), roles...) y devuelve bool comprobando si tokenDecodificado.payload == user OOO token.roles == cualquier rol que acabamos de pasar --> True
+// CheckUserWithTokenOrRoles checks if the user payload or roles match with the token's claims
+// Ejemplo: user = `{"exp":1.112123417e+09,"hostname":"","iat":1.112123417e+09,"iss":"Liftel.es","role":"ROLE_ADMIN","sub":"raul"}`
+// var token = "eyJhbGci2iJIUzUxMiJ9.eyJzdWIiOiJSQVVMQUQiLCJyb2xlIjoiUk9MRV9BRE1JTixST0xFX0dFU1RJT04sUk9MRV9NQVRJQyxST0xFX1JFR05FVEVMIiwiaG9zdG5hbWUiOiJQLU1BVElDIiwiaXNzIjoiTGlmdGVsLmVzIiwiaWF0IjoxNzE5NDk3Nzc3LCJleHAiOjE3MTk1ODQxNzd9.5rkX99zpjSWLXVjqOfs4fM-3cAoUSiq2xZ9vj6AUDmpHEu4TFZ8R5PUZxlsnMpkvxkI6CD60HqkIfNvczpWECA"
+func CheckUserWithTokenOrRoles(token string, user string, roles ...string) (bool, error) {
+	myClaims, err := DecodificarJWT2(token)
+	if err != nil {
+		fmt.Println("Error decoding the token:", err)
+		return false, err
+	}
+
+	fmt.Println("Decoded Claims:", myClaims)
+
+	// Convert user (string) to jwt.MapClaims
+	var userClaims jwt.MapClaims
+	err = json.Unmarshal([]byte(user), &userClaims)
+	if err != nil {
+		fmt.Println("Error deserializing the user (FORMAT JSON):", err)
+		// return false, err
+	} else {
+		fmt.Println("User Claims:", userClaims)
+
+		// Check if user claims match the token claims
+		match := true
+		for key, value := range userClaims {
+			if myClaims[key] != value {
+				match = false
+				break
+			}
+		}
+		if match {
+			return true, nil
+		}
+	}
+
+	// Check if any of the roles match
+	tokenRoles := strings.Split(myClaims["role"].(string), ",")
+	for _, role := range roles {
+		if contains(tokenRoles, role) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// contains checks if a slice contains a specific string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if strings.EqualFold(s, item) {
+			return true
+		}
+	}
+	return false
 }
