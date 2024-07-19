@@ -29,5 +29,12 @@ func PrintCallerInfo() {
 
 func init() {
 	PrintCallerInfo()
+}
 
+// Imprime la info que el programa ha entrado en la función
+func LogFunctionName() {
+	pc, _, _, _ := runtime.Caller(1)
+	fn := runtime.FuncForPC(pc)
+	fmt.Printf("-- -- FUNCTION -- -- -- -- --\n")
+	fmt.Printf("Function: %s\n", fn.Name())
 }
