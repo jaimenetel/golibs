@@ -32,6 +32,12 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, response JsonRespons
 	json.NewEncoder(w).Encode(response)
 }
 
+func RespondWithJSONList(w http.ResponseWriter, statusCode int, itemsList interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(itemsList)
+}
+
 // Responder con JSON simple (simplemente data)
 func RespondWithJSONSimple(w http.ResponseWriter, statusCode int, data interface{}) {
 	response := NewJsonResponse("", data, "")
