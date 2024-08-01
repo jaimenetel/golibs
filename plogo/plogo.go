@@ -1,6 +1,10 @@
 package plogo
 
-import "fmt"
+import (
+	"github.com/fatih/color"
+)
+
+var success = color.New(color.FgGreen, color.Bold)
 
 func LogoLiftel() {
 	image := `
@@ -11,5 +15,5 @@ func LogoLiftel() {
 ⠀⠀⠀⠀⠀⢸⣿⠀⣀⣀⣀⣀⣀⣾⣿⠀⠀⠀⣿⣿⠀⣿⣿⠀⢸⣿⡇⠀⠀⠀⣿⣧⠀⡀⠘⣿⣧⡀⠀⣀⣀⠀⢸⣿⡇⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠈⠛⠀⠿⠿⠿⠿⠿⠿⠋⠀⠀⠀⠿⠟⠀⠻⠟⠀⠘⠿⠃⠀⠀⠀⠙⠿⠿⠃⠀⠈⠛⠿⠿⠟⠋⠀⠘⠿⠃⠀⠀⠀⠀⠀
 	`
-	fmt.Println(image)
+	success.Println(image)
 }
