@@ -115,3 +115,13 @@ func Mosquiteroinit() {
 func defaultMessageHandler(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 }
+
+// Unsubscribe se desuscribe de una lista de topics.
+func (m *Mosquitero) Unsubscribe(topics []string) error {
+	token := m.client.Unsubscribe(topics...)
+	token.Wait()
+	if token.Error() != nil {
+		return token.Error()
+	}
+	return nil
+}
